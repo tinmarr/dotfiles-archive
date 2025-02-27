@@ -1,0 +1,4 @@
+### .include /etc/pulse/default.pa
+
+### load-module module-switch-on-connect
+### load-module module-bluez5-discover

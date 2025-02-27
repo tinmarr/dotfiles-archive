@@ -1,0 +1,499 @@
+#+title: Qtile Config
+#+AUTHOR: Martin Chaperot
+#+PROPERTY: header-args :tangle config.py 
+#+STARTUP: overview
+
+* Imports
+#+begin_src python
+import os
+import random
+import subprocess
+
+from libqtile import bar, hook, qtile
+from libqtile.backend import base
+from libqtile.config import Drag, Group, Key, KeyChord, Match, Screen, Rule
+from libqtile.core.manager import Qtile
+from libqtile.layout.columns import Columns
+from libqtile.layout.floating import Floating
+from libqtile.lazy import lazy
+from qtile_extras import widget
+#+end_src
+* Global variables
+#+begin_src python
+qtile: Qtile
+terminal = "kitty"
+RANDOM_WALLPAPER = True
+DESKTOP = os.getenv("DESKTOP", "false") == "true"
+NVIDIA = os.getenv("NVIDIA", "false") == "true"
+
+mod = "mod4" # Super
+alt = "mod1" # Alt
+#+end_src
+* Helper Functions
+** Get Wallpaper
+Gets a random wallpaper or a predefined one.
+#+begin_src python
+def get_wallpaper():
+    BACKGROUNDS_PATH = "~/.local/share/backgrounds"
+    if not RANDOM_WALLPAPER: return f"{BACKGROUNDS_PATH}/pyramids.jpg"
+    folder = os.path.expanduser(BACKGROUNDS_PATH)
+    files = [f for f in os.listdir(folder) if os.path.isfile(os.path.join(folder, f))]
+    return BACKGROUNDS_PATH + "/" + random.choice(files) if files else ""
+#+end_src
+** Misc
+These are self explainatory
+#+begin_src python
+def make_icon(raw_unicode: str) -> str:
+    return raw_unicode.encode("utf-16", "surrogatepass").decode("utf-16")
+
+
+def send_notif(_, title: str, body: str = ""):
+    subprocess.Popen(["notify-send", title, body])
+#+end_src
+* Theme Definition
+#+begin_src python
+class Theme:
+    wallpaper = get_wallpaper()
+    background = "#282a36"
+    secondary = "#44475a"
+    alternate = "#6272a4"
+    foreground = "#f8f8f2"
+    purple = "#bd93f9"
+    pink = "#ff79c6"
+    red = "#ff5555"
+    green = "#50fa7b"
+    cyan = "#8be9fd"
+    orange = "#ffb86c"
+    yellow = "#f1fa8c"
+    transparent = "#00000000"
+#+end_src
+* Hooks
+#+begin_src python
+@hook.subscribe.startup_complete
+def autostart():
+    subprocess.Popen(["/usr/lib/kdeconnectd"])
+    subprocess.Popen("playerctld daemon", shell=True)
+    subprocess.Popen(["picom", "-b"])
+    subprocess.run("autorandr -c", shell=True)
+    subprocess.Popen("emacs --daemon", shell=True)
+    subprocess.Popen(f"betterlockscreen -u {get_wallpaper()}", shell=True)
+
+@hook.subscribe.focus_change
+def color_tasklist():
+    window_count = len(qtile.current_screen.group.windows)
+    tasklist = qtile.current_screen.top.widgets[2]
+    if window_count == 0:
+        tasklist.decorations[0].colour = Theme.transparent
+    if window_count == 1:
+        tasklist.decorations[0].colour = Theme.purple
+    if window_count > 1:
+        tasklist.decorations[0].colour = Theme.alternate
+#+end_src
+* Keybindings
+** Movement Keys
+#+begin_src python
+focus_keys = [
+    # A list of available commands that can be bound to keys can be found
+    # at https://docs.qtile.org/en/latest/manual/config/lazy.html
+    # Switch between windows
+    Key([mod], "h", lazy.layout.left(), desc="Move focus to left"),
+    Key([mod], "l", lazy.layout.right(), desc="Move focus to right"),
+    Key([mod], "j", lazy.layout.down(), desc="Move focus down"),
+    Key([mod], "k", lazy.layout.up(), desc="Move focus up"),
+    Key([mod], "tab", lazy.layout.previous(), desc="Move focus to previous window"),
+    Key([mod], "u", lazy.next_urgent(), desc="To urgent window"),
+    Key([mod], "q", lazy.window.kill(), desc="Kill focused window"),
+    Key([mod, alt], "h", lazy.prev_screen(), desc="Move focus to previous screen"),
+    Key([mod, alt], "l", lazy.next_screen(), desc="Move focus to next screen"),
+]
+#+end_src
+** Layout Editing Keys
+#+begin_src python
+layout_keys = [
+    # Move windows between left/right columns or move up/down in current stack.
+    # Moving out of range in Columns layout will create new column.
+    Key(
+        [mod, "shift"],
+        "h",
+        lazy.layout.shuffle_left(),
+        desc="Move window to the left",
+    ),
+    Key(
+        [mod, "shift"],
+        "l",
+        lazy.layout.shuffle_right(),
+        desc="Move window to the right",
+    ),
+    Key([mod, "shift"], "j", lazy.layout.shuffle_down(), desc="Move window down"),
+    Key([mod, "shift"], "k", lazy.layout.shuffle_up(), desc="Move window up"),
+    # Grow windows. If current window is on the edge of screen and direction
+    # will be to screen edge - window would shrink.
+    Key([mod, "control"], "h", lazy.layout.grow_left(), desc="Grow window to the left"),
+    Key(
+        [mod, "control"], "l", lazy.layout.grow_right(), desc="Grow window to the right"
+    ),
+    Key([mod, "control"], "j", lazy.layout.grow_down(), desc="Grow window down"),
+    Key([mod, "control"], "k", lazy.layout.grow_up(), desc="Grow window up"),
+    Key([mod], "n", lazy.layout.normalize(), desc="Reset all window sizes"),
+    # Window modification
+    Key([mod], "f", lazy.window.toggle_fullscreen(), desc="Toggle window fullscreen"),
+    Key([mod, "shift"], "f", lazy.window.toggle_floating(), desc="Toggle window float"),
+    Key([mod], "m", lazy.window.toggle_maximize(), desc="Toggle window fullscreen"),
+    Key([mod, "shift"], "m", lazy.window.toggle_minimize(), desc="Toggle window float"),
+    # Keyboard layout
+    Key([mod], "space", lazy.widget["keyboardlayout"].next_keyboard(), desc="Next keyboard layout."),
+]
+#+end_src
+** System Keys
+#+begin_src python
+system_keys = [
+    # System Controls
+    Key(
+        [],
+        "XF86MonBrightnessUp",
+        lazy.spawn("xbacklight +5"),
+        desc="Increase brightness",
+    ),
+    Key(
+        [],
+        "XF86MonBrightnessDown",
+        lazy.spawn("xbacklight -5"),
+        desc="Decrease brightness",
+    ),
+    Key(
+        [],
+        "XF86AudioRaiseVolume",
+        lazy.spawn("amixer -D default set Master 5%+"),
+        desc="Increase volume",
+    ),
+    Key(
+        [],
+        "XF86AudioLowerVolume",
+        lazy.spawn("amixer -D default set Master 5%-"),
+        desc="Decrease volume",
+    ),
+    Key(
+        [],
+        "XF86AudioMute",
+        lazy.spawn("amixer -D default set Master toggle"),
+        desc="Mute volume",
+    ),
+    Key(
+        [],
+        "XF86AudioPlay",
+        lazy.spawn("playerctl play-pause"),
+        desc="Toggle audio",
+    ),
+    Key(
+        [],
+        "XF86AudioPrev",
+        lazy.spawn("playerctl previous"),
+        desc="Toggle audio",
+    ),
+    Key(
+        [],
+        "XF86AudioNext",
+        lazy.spawn("playerctl next"),
+        desc="Toggle audio",
+    ),
+]
+#+end_src
+** General Actions
+#+begin_src python
+action_keys = [
+    Key([mod], "Return", lazy.spawn(terminal), desc="Launch terminal"),
+    Key([mod], "e", lazy.spawn("emacsclient -c"), desc="Launch Emacs"),
+    Key([mod, "control"], "r", lazy.reload_config(), desc="Reload the config"),
+    Key([mod, "shift", "control"], "r", lazy.restart(), desc="Restart Qtile"),
+    Key([mod, "shift"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
+    Key([], "Print", lazy.spawn("flameshot gui"), desc="Take screenshot"),
+    # Lockscreen
+    Key(
+        [mod, "shift"],
+        "w",
+        lazy.spawn("betterlockscreen -l dimblur"),
+        desc="Lock screen",
+    ),
+    # Turn off screen
+    Key([mod], "s", lazy.spawn("xdg-screensaver activate", shell=True), desc="Turn off screen"),
+]
+#+end_src
+** Rofi Scripts
+#+begin_src python
+rofi_script_keys = [
+    Key([mod], "r", lazy.spawn("rofi -show run"), desc="Launch rofi"),
+    Key([alt], "Tab", lazy.spawn("rofi -show window"), desc="Alt-tab with rofi"),
+    KeyChord(
+        [mod, "shift"],
+        "r",
+        [
+            Key([], "m", lazy.spawn("rofi-autorandr")),
+            Key(
+                [],
+                "c",
+                lazy.spawn("rofi -show calc -modi calc -no-show-match -no-sort"),
+            ),
+            Key(
+                [], "e", lazy.spawn("rofi -modi emoji -show emoji -kb-custom-1 Ctrl+c")
+            ),
+        ],
+        name="scripts",
+        desc="Run rofi scripts",
+    ),
+]
+#+end_src
+** Merging of keybindings
+#+begin_src python
+keys = [*focus_keys, *layout_keys, *system_keys, *action_keys, *rofi_script_keys]
+#+end_src
+* Groups
+#+begin_src python
+groups = [
+    Group("1"),
+    Group("2", matches=[Match(wm_class="code")]),
+    Group("3"),
+    Group("4", matches=[Match(wm_class="slack")]),
+    Group("5", matches=[Match(wm_class="zoom")]),
+    Group("6"),
+    Group("7"),
+    Group("8"),
+    Group("9", matches=[Match(wm_class="spotify")]),
+    Group("0", matches=[Match(wm_class="clockify")]),
+]
+
+for i in groups:
+    keys.extend(
+        [
+            # mod1 + letter of group = switch to group
+            Key(
+                [mod],
+                i.name,
+                lazy.group[i.name].toscreen(),
+                desc=f"Switch to group {i.name}",
+            ),
+            # mod1 + shift + letter of group = move focused window to group
+            Key(
+                [mod, "shift"],
+                i.name,
+                lazy.window.togroup(i.name),
+                desc=f"Move focused window to group {i.name}",
+            ),
+        ]
+    )
+#+end_src
+* Layout
+#+begin_src python
+layouts = [
+    Columns(
+        border_focus=Theme.purple,
+        border_focus_stack=Theme.purple,
+        border_normal=Theme.secondary,
+        border_normal_stack=Theme.secondary,
+        border_on_single=True,
+        border_width=4,
+        insert_position=1,
+        margin=8,
+    ),
+]
+#+end_src
+* Status Bar Widgets
+** Default setttings
+#+begin_src python
+widget_defaults = dict(
+    font="JetBrainsMono Nerd Font Mono",
+    fontsize=24,
+    padding=12,
+    background=Theme.transparent,
+    foreground=Theme.foreground,
+)
+extension_defaults = widget_defaults.copy()
+#+end_src
+
+** Widget Creator Function
+I do it like this to have bars on all my monitors that work well
+#+begin_src python
+BARS_COUNT = 0
+
+def make_bar():
+    global BARS_COUNT
+    BARS_COUNT += 1
+
+    decoration_group = {
+        "decorations": [
+            widget.decorations.RectDecoration(
+                colour=[Theme.alternate], radius=23, filled=True, group=True
+            )
+        ],
+    }
+
+    b = bar.Bar(
+        [
+            widget.GroupBox(
+                highlight_method="block",
+                this_current_screen_border=Theme.purple,
+                this_screen_border=Theme.secondary,
+                other_current_screen_border=Theme.background,
+                other_screen_border=Theme.background,
+                spacing=3,
+                padding=3,
+                margin_x=12,
+                disable_drag=True,
+                **decoration_group,
+            ),
+            widget.Spacer(length=300),
+            widget.TaskList(
+                border=Theme.purple,
+                highlight_method="block",
+                margin_x=24,
+                margin_y=3,
+                padding=9,
+                unfocused_border=Theme.alternate,
+                urgent_border=Theme.red,
+                txt_minimized=make_icon("\udb81\uddb0") + " ",
+                txt_floating=make_icon("\udb84\udcac") + " ",
+                txt_maximized=make_icon("\udb81\uddaf") + " ",
+                icon_size=24,
+                title_width_method="uniform",
+                decorations=[
+                    widget.decorations.RectDecoration(
+                        colour=Theme.transparent, radius=23, filled=True, group=True
+                    )
+                ],
+            ),
+            widget.Spacer(length=300),
+            widget.StatusNotifier(**decoration_group),
+            widget.Chord(**decoration_group),
+            widget.Spacer(length=15),
+            widget.KeyboardLayout(
+                configured_keyboards=["us", "us dvorak"],
+                **decoration_group,
+            ),
+            widget.Volume(
+                volume_app="pavucontrol",
+                fmt=make_icon("\udb81\udd7e") + " {}",
+                **decoration_group,
+            ),
+            widget.Backlight(
+                fmt=make_icon("\udb80\udcde") + " {}",
+                backlight_name="intel_backlight",
+                **decoration_group,
+            ) if not DESKTOP else widget.Spacer(length=0),
+            widget.Spacer(length=15),
+            widget.Battery(
+                notify_below=10,
+                charge_char=make_icon("\udb80\udc84"),
+                discharge_char=make_icon("\udb80\udc7e"),
+                empty_char=make_icon("\udb80\udc83"),
+                full_char=make_icon("\udb80\udc79"),
+                unknown_char=make_icon("\udb80\udc91"),
+                format="{char} {percent:2.0%} {hour:d}:{min:02d}",
+                **decoration_group,
+            ) if not DESKTOP else widget.Spacer(length=0),
+            widget.ThermalSensor(
+                fmt=make_icon("\uf4bc") + " {}",
+                threshold=90,
+                foreground_alert=Theme.red,
+                tag_sensor="Package id 0", # CPU
+                **decoration_group,
+            ),
+            widget.NvidiaSensors(
+                fmt=make_icon("\ue266") + " {}",
+                threshold=90,
+                foreground_alert=Theme.red,
+                **decoration_group,
+            ) if NVIDIA else widget.Spacer(length=0),
+            widget.Spacer(length=15),
+            widget.Clock(format="%a %d %b %H:%M:%S", **decoration_group),
+        ],
+        48,
+        background=Theme.transparent,
+        border_width=0,
+        border_color=Theme.transparent,
+        margin=[8, 8, 0, 8],
+        opacity=1,
+    )
+    return b
+#+end_src
+* Screen Config
+I create 3 screens because I never need more
+#+begin_src python
+screens = [
+    Screen(
+        top=make_bar(),
+        wallpaper=Theme.wallpaper,
+        wallpaper_mode="fill",
+    ),
+    Screen(
+        top=make_bar(),
+        wallpaper=Theme.wallpaper,
+        wallpaper_mode="fill",
+    ),
+    Screen(
+        top=make_bar(),
+        wallpaper=Theme.wallpaper,
+        wallpaper_mode="fill",
+    ),
+]
+#+end_src
+* Mouse config
+#+begin_src python
+# Drag floating layouts.
+mouse = [
+    Drag(
+        [mod],
+        "Button1",
+        lazy.window.set_position_floating(),
+        start=lazy.window.get_position(),
+    ),
+    Drag(
+        [mod], "Button3", lazy.window.set_size_floating(), start=lazy.window.get_size()
+    ),
+]
+#+end_src
+* Misc config
+#+begin_src python
+dgroups_key_binder = None
+dgroups_app_rules = []
+follow_mouse_focus = False
+bring_front_click = False
+cursor_warp = False
+floats_kept_above = True
+floating_layout = Floating(
+    border_focus=Theme.pink,
+    border_normal=Theme.secondary,
+    border_width=4,
+    float_rules=[
+        # Run the utility of `xprop` to see the wm class and name of an X client.
+        *Floating.default_float_rules,
+        Match(wm_class="confirmreset"),  # gitk
+        Match(wm_class="makebranch"),  # gitk
+        Match(wm_class="maketag"),  # gitk
+        Match(wm_class="ssh-askpass"),  # ssh-askpass
+        Match(title="branchdialog"),  # gitk
+        Match(title="pinentry"),  # GPG key password entry
+        Match(title="zoom"),  # zoom
+        Match(wm_class="solanum"),  # solanum
+        Match(role="pop-up"),
+    ],
+)
+auto_fullscreen = True
+focus_on_window_activation = "smart"
+reconfigure_screens = True
+
+# If things like steam games want to auto-minimize themselves when losing
+# focus, should we respect this or not?
+auto_minimize = True
+
+# When using the Wayland backend, this can be used to configure input devices.
+wl_input_rules = None
+
+# Gasp! We're lying here. In fact, nobody really uses or cares about this
+# string besides java UI toolkits; you can see several discussions on the
+# mailing lists, GitHub issues, and other WM documentation that suggest setting
+# this string if your java app doesn't work correctly. We may as well just lie
+# and say that we're a working one by default.
+#
+# We choose LG3D to maximize irony: it is a 3D non-reparenting WM written in
+# java that happens to be on java's whitelist.
+wmname = "LG3D"
+#+end_src
