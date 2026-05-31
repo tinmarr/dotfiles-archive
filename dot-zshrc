@@ -1,0 +1,135 @@
+#!/usr/bin/env zsh
+
+# Load prompt
+eval "$(oh-my-posh init zsh --config ~/.config/ohmyposh/theme.json)"
+
+# Plugin Manager (zinit)
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)" # check if the directory is there
+[ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" # zinit isn't installed, install it
+source "${ZINIT_HOME}/zinit.zsh"
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+unalias zi
+
+# add mason binaries to path (faster nvim & for opencode)
+export PATH="$HOME/.local/share/nvim/mason/bin:$PATH"
+
+# Install plugins
+zinit wait lucid light-mode for \
+      atload"_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
+      atinit"zicompinit; zicdreplay" zsh-users/zsh-syntax-highlighting \
+      blockf atpull'zinit creinstall -q .' zsh-users/zsh-completions \
+      Aloxaf/fzf-tab
+
+zinit ice wait"[[ -e ./.python-version ]]" lucid atload'eval "$(pyenv init -)"'
+zinit light "$PYENV_ROOT"
+
+# Install snippets
+zinit ice wait lucid; zinit snippet OMZP::sudo
+
+# Direnv with zinit
+zinit from"gh-r" as"program" mv"direnv* -> direnv" \
+    atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' \
+    pick"direnv" src="zhook.zsh" for \
+        direnv/direnv
+
+# ZSH Shell options
+# https://zsh.sourceforge.io/Doc/Release/Options.html
+unsetopt beep
+setopt correct
+setopt correct
+setopt share_history append_history hist_ignore_space
+setopt hist_ignore_all_dups hist_save_no_dups hist_ignore_dups hist_find_no_dups
+setopt auto_cd
+
+# Enable vi mode
+bindkey -v
+
+# key binds
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
+bindkey '^H' backward-kill-word
+bindkey "^[[3~" delete-char
+bindkey -s "^E^F" "^usessionizer^M"
+
+# Keep 1000 lines of history within the shell and save it to ~/.zsh_history:
+HISTSIZE=5000
+SAVEHIST=5000
+HISTFILE=~/.zsh_history
+HISTDUP=erase
+
+# Case insensitive completion
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
+# Colors in completions
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+
+# setup fzf-tab
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+# NOTE: don't use escape sequences here, fzf-tab will ignore them
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# force zsh not to show completion menu, which allows fzf-tab to capture the unambiguous prefix
+zstyle ':completion:*' menu no
+# preview directory's content with eza when completing cd
+zstyle ':fzf-tab:complete:z:*' fzf-preview 'eza -1 --color=always $realpath'
+# switch group using `<` and `>`
+zstyle ':fzf-tab:*' switch-group '<' '>'
+
+bindkey '^K' up-line-or-history
+bindkey '^J' down-line-or-history
+
+# Standard Terminal Variables
+export LANG=en_US.UTF-8
+export EDITOR="nvim"
+export GPG_TTY=$TTY
+
+# Load various shell utilities
+export FZF_DEFAULT_OPTS="--height 40% --tmux center --layout reverse --border"
+eval "$(fzf --zsh)"
+eval "$(zoxide init zsh)"
+
+# Use bat in manpages
+export MANROFFOPT="-c"
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+
+#### Quick aliases ####
+alias ls="eza --icons --group-directories-first"
+alias l="ls"
+alias la="ls -a"
+alias ll="ls -l --git"
+alias lla="ls -l -a --git"
+alias v="nvim"
+alias t="tmux"
+alias s="ssh"
+alias h="history 0"
+alias lg="lazygit"
+alias ms="sudo test; metapac sync && metapac clean"
+alias sesh="sessionizer"
+alias oc="opencode"
+
+#### Macros ####
+alias updategrub="sudo grub-mkconfig -o /boot/grub/grub.cfg"
+alias pipunall="pip freeze | grep -v '^-e' | xargs pip uninstall -y"
+tzupdate () {
+    # Function because the curl is evaluated as an alias
+    timedatectl set-timezone $(curl https://ipapi.co/timezone)
+}
+alias watch_dirty="watch -n 0.5 'cat /proc/meminfo | rg Dirty --before-context=3 --after-context=1'"
+
+# https://yazi-rs.github.io/docs/quick-start#shell-wrapper
+y () {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
