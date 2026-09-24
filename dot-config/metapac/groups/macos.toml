@@ -1,0 +1,70 @@
+brew = {
+    packages = [
+        # base
+        "git",
+        "git-lfs",
+        "pinentry",
+        "gnupg",
+        "pinentry-mac",
+        "stow",
+        # terminal utilities
+        "bat",
+        "btop",
+        "direnv",
+        "eza",
+        "fd",
+        "fzf",
+        "gh",
+        "jq",
+        "lazydocker",
+        "lazygit",
+        "neovim",
+        "oh-my-posh",
+        "ripgrep",
+        "tldr",
+        "tmux",
+        "tpm",
+        "wget",
+        "yarn",
+        "yazi",
+        "zoxide",
+        # graphical stuff
+        "nikitabobko/tap/aerospace",
+        "ghostty",
+        "postman",
+        "raycast",
+        "slack",
+        "spotify",
+        "zen",
+        # golang
+        "go",
+        "delve",
+        "golangci-lint",
+        # node
+        "node",
+        "node@20",
+        "nvm",
+        "pnpm",
+        # dev environment
+        { name = "colima", hooks = { after_install = [
+            "brew",
+            "services",
+            "enable",
+            "colima",
+        ] } },
+        "docker",
+        "docker-buildx",
+        "docker-compose",
+        # misc utilities
+        { name = "syncthing", hooks = { after_install = [
+            "brew",
+            "services",
+            "enable",
+            "syncthing",
+        ] } },
+        "font-jetbrains-mono-nerd-font",
+        "hiddenbar",
+        "karabiner-elements",
+        "mac-mouse-fix@2",
+    ]
+}

@@ -1,0 +1,205 @@
+@import "catppuccin-mocha.css";
+
+* {
+    font-family: JetBrainsMono Nerd Font Propo;
+    font-size: 11px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+window#waybar {
+    background-color: transparent;
+    color: @text;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+/***** PILLS *****/
+.module {
+    padding: 0px 5px;
+    background: @base;
+    border-top: 1px solid @mauve;
+    border-bottom: 1px solid @mauve;
+}
+
+/* Solo pills */
+#custom-icon,
+#workspaces,
+#custom-weather,
+#clock,
+#submap,
+#tray,
+#custom-dualsense,
+#custom-level,
+#custom-voxtype,
+#custom-dunst {
+    border-radius: 32px;
+    border: 1px solid @mauve;
+    margin-left: 5px;
+    padding: 0 10px;
+}
+
+/* Right edge */
+#power-profiles-daemon, #pulseaudio {
+    border-radius: 32px 0 0 32px;
+    margin-left: 5px;
+    padding-left: 10px;
+    border-left: 1px solid @mauve;
+}
+
+/* Left edge*/
+#network, #backlight {
+    border-radius: 0 32px 32px 0;
+    padding-right: 10px;
+    border-right: 1px solid @mauve;
+}
+
+/* Fine tuning */
+#clock {
+    margin: 0;
+}
+
+#custom-icon {
+    padding: 0 6px;
+    margin: 0;
+}
+
+#custom-dunst {
+    font-size: 14px;
+    padding: 0 6px;
+}
+
+/* Newer Waybar custom modules wrap the label in an AIconLabel box and still
+   mark the inner label as .module. Keep the pill on the outer box only. */
+#custom-icon label,
+#custom-weather label,
+#custom-voxtype label,
+#custom-dualsense label,
+#custom-level label,
+#custom-dunst label {
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+/***** LABEL LOOK *****/
+#network {
+    color: @maroon;
+}
+
+#pulseaudio {
+    color: @yellow;
+}
+
+#backlight {
+    color: @sky;
+}
+
+#battery {
+    color: @green;
+}
+
+#bluetooth {
+    color: @teal;
+    font-size: 14px;
+}
+
+#power-profiles-daemon, #custom-weather {
+    color: @peach;
+}
+
+#custom-level, #custom-dualsense {
+    color: @lavender;
+}
+
+#custom-voxtype {
+    padding: 0 10px;
+}
+
+#custom-voxtype.recording {
+    color: #ff5555;
+    animation: voxtype-pulse 1s ease-in-out infinite;
+}
+
+#custom-voxtype.transcribing {
+    color: #f1fa8c;
+}
+
+
+#custom-icon {
+    color: @sapphire;
+}
+
+#clock {
+    color: @pink;
+}
+
+/***** Layout *****/
+.modules-left,
+.modules-center,
+.modules-right {
+    margin-top: 5px;
+    margin-bottom: 0;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+/***** WORKSPACE *****/
+#workspaces {
+    padding: 0;
+}
+
+#workspaces button {
+    padding: 0px 4px;
+    margin: 0;
+    border-radius: 32px;
+    background-color: transparent;
+    color: @mauve;
+}
+
+#workspaces button.active {
+    color: @base;
+    background-color: @mauve;
+}
+
+#workspaces button.urgent {
+    background-color: @red;
+}
+
+/***** POPUPS *****/
+tooltip, menu {
+	background: @crust;
+	border: 1px solid @lavender;
+    border-radius: 5px;
+}
+
+tooltip label {
+	margin: 3px 6px;
+	color: @lavender;
+}
+
+menu {
+    padding: 3px 0;
+}
+
+menuitem {
+    background: @mantle;
+    margin: 0 1px;
+    padding: 1px 0;
+	color: @lavender;
+}
+
+/***** TRAY *****/
+#tray > .passive {
+    color: @overlay2;
+}
+
+@keyframes voxtype-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

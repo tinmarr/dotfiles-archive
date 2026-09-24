@@ -1,0 +1,152 @@
+# Standalone Arch server profile
+npm = {
+    packages = [
+        {
+            name = "t3",
+            hooks = {
+                after_install = ["t3", "service", "install"],
+                after_sync = ["t3","service","update"]
+            }
+        }
+    ]
+}
+arch = {
+    packages = [
+        # core Linux
+        {
+            name = "base",
+            hooks = {
+                after_sync = [
+                    "sudo",
+                    "systemctl",
+                    "enable",
+                    "systemd-networkd.service",
+                    "systemd-resolved.service",
+                    "systemd-timesyncd.service",
+                ]
+            }
+        },
+        "base-devel",
+        "linux-firmware",
+        "pacman-contrib",
+
+        # boot and kernel
+        "grub",
+        "os-prober",
+        "linux",
+        "linux-headers",
+
+        # docs
+        "man-db",
+        "man-pages",
+        "tldr",
+
+        # package management
+        "paru",
+        "metapac",
+
+        # connectivity
+        {
+            name = "openssh",
+            hooks = {
+                after_sync = [
+                    "sudo",
+                    "systemctl",
+                    "enable",
+                    "sshd",
+                ]
+            }
+        },
+
+        # low-level control
+        "fwupd",
+        "dmidecode",
+
+        # shell
+        "fish",
+        "oh-my-posh-bin",
+        "ripgrep",
+        "eza",
+        "bat",
+        "direnv",
+        "fzf",
+        "zoxide",
+        "reflector",
+        "openai-codex",
+
+        # tmux
+        "tmux",
+        "tmux-plugin-manager",
+
+        # terminal utilities
+        "vim",
+        "github-cli",
+        "fastfetch",
+        "btop",
+        "nvtop",
+        "stress",
+        "tree",
+        "unzip",
+        "zip",
+        "wget",
+        "rsync",
+        "bind",
+        "stow",
+        "opencode",
+        "jq",
+        "7zip",
+        "fd",
+        "imagemagick",
+        "chafa",
+        "git-lfs",
+        "npm",
+
+        # containers
+        {
+            name = "podman",
+            hooks = {
+                after_sync = [
+                    "systemctl",
+                    "--user",
+                    "enable",
+                    "podman.socket",
+                ],
+            },
+        },
+        "docker",
+        "docker-buildx",
+        "docker-compose",
+
+        # terminal dependencies
+        "python-dbus-next",
+
+        # server hardware
+        "intel-ucode",
+        "libva-intel-driver",
+
+        # basic support
+        "ghostty-terminfo",
+        "fcron",
+        "nginx",
+        "nginx-mod-stream",
+        "rclone",
+        "restic",
+        "ufw",
+        "wireguard-tools",
+
+        # functionality
+        "lazydocker-bin",
+        "lazygit",
+        "smartmontools",
+        "openbsd-netcat",
+        "ffmpeg",
+        "exim",
+        "s-nail",
+        "powertop",
+        "ncdu",
+        "iotop",
+        "powerstat",
+        "pigz",
+        "fail2ban",
+    ]
+}

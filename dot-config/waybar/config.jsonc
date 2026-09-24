@@ -1,0 +1,159 @@
+{
+    "layer": "top", // Waybar at top layer
+    "position": "top", // Waybar position (top|bottom|left|right)
+    "height": 20, // Waybar height (to be removed for auto height)
+    "spacing": 0, // Gaps between modules (4px)
+    // Choose the order of the modules
+    "modules-left": [
+        "custom/icon",
+        "hyprland/workspaces",
+        "custom/weather",
+        "custom/voxtype",
+        "hyprland/submap"
+    ],
+    "modules-center": [
+        "clock"
+    ],
+    "modules-right": [
+        "tray",
+        "custom/dualsense",
+        "custom/level",
+        // laptop
+        "power-profiles-daemon",
+        "battery",
+        "backlight",
+        // general
+        "pulseaudio",
+        "bluetooth",
+        "network",
+        "custom/dunst"
+    ],
+    // Modules configuration
+    "custom/dunst": {
+        "exec": "~/.config/waybar/dunst.sh",
+        "on-click": "dunstctl set-paused toggle",
+        "restart-interval": 1,
+        "tooltip": false
+    },
+    "custom/level": {
+        "exec": "~/.local/bin/level",
+        "interval": 300, // 5 mins
+        "format": "{} ",
+        "hide-empty-text": true,
+        "tooltip": false
+    },
+    "custom/dualsense": {
+        "exec": "dualsense",
+        "interval": 300,
+        "format": "{}",
+        "on-click": "dualsensectl power-off && killall -SIGUSR2 waybar",
+        "tooltip": false
+    },
+    "custom/voxtype": {
+        "exec": "voxtype status --follow --format json",
+        "return-type": "json",
+        "format": "{icon}",
+        "hide-empty-text": true,
+        "format-icons": {
+            "idle": "",
+            "recording": "󰍬",
+            "transcribing": "",
+            "stopped": ""
+        },
+        "tooltip": false,
+        "on-click": "systemctl --user restart voxtype"
+    },
+    "custom/icon": {
+        "format": "",
+        "tooltip": false,
+        "on-click": "elephant menu system-control"
+    },
+    "custom/weather": {
+        "exec": "weather",
+        "interval": 900,
+        "format": "{}",
+        "hide-empty-text": true,
+        "tooltip": false
+    },
+    "hyprland/workspaces": {},
+    "hyprland/window": {
+        "max-length": 20,
+        "min-length": 20,
+        "separate-outputs": true
+    },
+    "tray": {
+        "spacing": 10,
+        "show-passive-items": true
+    },
+    "backlight": {
+        "format": "{percent}% {icon}",
+        "format-icons": [
+            "󰃚",
+            "󰃛",
+            "󰃜",
+            "󰃝",
+            "󰃞",
+            "󰃟",
+            "󰃠"
+        ]
+    },
+    "power-profiles-daemon": {
+        "format": "{icon}",
+        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+        "tooltip": true,
+        "format-icons": {
+            "default": "",
+            "performance": "",
+            "balanced": "",
+            "power-saver": ""
+        }
+    },
+    "battery": {
+        "format": "{capacity}% {icon}",
+        "format-icons": [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+        "format-charging": "{capacity}% {icon}",
+        "bat-compatibility": true
+    },
+    "clock": {
+        "tooltip": false,
+        "format": "{:%a %d %b %H:%M:%S}",
+        "interval": 1
+    },
+    "pulseaudio": {
+        "format": "{volume}% {icon}",
+        "format-bluetooth": "{volume}% {icon}",
+        "format-bluetooth-muted": " {icon}",
+        "format-icons": {
+            "headphone": "",
+            "default": [
+                "",
+                "",
+                ""
+            ]
+        },
+        "format-muted": " {icon}",
+        "on-click": "ghostty --title='-float-' -e wiremix"
+    },
+    "bluetooth": {
+        "format": "",
+        "format-off": "󰂲",
+        "format-on": "󰂯",
+        "format-connected": "󰂱",
+        "on-click": "ghostty --title='-float-' -e bluetui"
+    },
+    "network": {
+        "format-ethernet": "",
+        "format-wifi": "",
+        "format-linked": "",
+        "format-disconnected": "",
+        "format-disabled": "",
+        "tooltip": false,
+        "on-click": "ghostty --title='-float-' -e impala"
+    }
+}
